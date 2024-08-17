@@ -1,19 +1,16 @@
-"""Configuration Test Suite."""
+"""HacsConfiguration Test Suite."""
 # pylint: disable=missing-docstring
 import pytest
 
-from custom_components.hacs.helpers.classes.exceptions import HacsException
-from custom_components.hacs.hacsbase.configuration import Configuration
+from custom_components.hacs.base import HacsConfiguration
+from custom_components.hacs.exceptions import HacsException
 
 
 def test_configuration_and_option():
-    config = Configuration.from_dict({"token": "xxxxxxxxxx"}, {})
+    config = HacsConfiguration()
+    config.update_from_dict({"token": "xxxxxxxxxx"})
 
     assert isinstance(config.to_json(), dict)
-    config.print()
-
-    assert isinstance(config.options, dict)
-    assert isinstance(config.config, dict)
 
     assert isinstance(config.token, str)
     assert config.token == "xxxxxxxxxx"
@@ -27,19 +24,11 @@ def test_configuration_and_option():
     assert isinstance(config.appdaemon, bool)
     assert not config.appdaemon
 
-    assert isinstance(config.netdaemon, bool)
-    assert not config.netdaemon
-
     assert isinstance(config.python_script, bool)
     assert not config.python_script
 
-    assert isinstance(config.onboarding_done, bool)
-    assert not config.onboarding_done
-
     assert isinstance(config.theme, bool)
     assert not config.theme
-
-    assert isinstance(config.options, dict)
 
     assert isinstance(config.country, str)
     assert config.country == "ALL"
@@ -47,19 +36,26 @@ def test_configuration_and_option():
     assert isinstance(config.release_limit, int)
     assert config.release_limit == 5
 
-    assert isinstance(config.experimental, bool)
-    assert not config.experimental
+
+def test_ignore_experimental():
+    """Test experimental setting is ignored."""
+    config = HacsConfiguration()
+    assert not hasattr(config, "experimental")
+
+    config.update_from_dict({"experimental": False})
+    assert not hasattr(config, "experimental")
 
 
-def test_edge_option_only_pass_empty_dict_as_configuration():
+def test_ignore_netdaemon():
+    """Test netdaemon setting is ignored."""
+    config = HacsConfiguration()
+    assert not hasattr(config, "netdaemon")
+
+    config.update_from_dict({"netdaemon": True})
+    assert not hasattr(config, "netdaemon")
+
+
+def test_edge_update_with_none():
+    config = HacsConfiguration()
     with pytest.raises(HacsException):
-        assert Configuration.from_dict({}, {"experimental": True})
-
-
-def test_edge_configuration_only_pass_none_as_option():
-    assert Configuration.from_dict({"token": "xxxxxxxxxx"}, None)
-
-
-def test_edge_options_true():
-    with pytest.raises(HacsException):
-        assert Configuration.from_dict({"options": True}, None)
+        assert config.update_from_dict(None)
